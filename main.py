@@ -314,7 +314,7 @@ def exportarExcel():
     # Formato de fecha
     now = datetime.now()    
     format = now.strftime('%d-%m-%Y')
-    file_path = filedialog.asksaveasfile(title=f"Guardar como", filetypes=[('Archivos de Excel', '*.xlsx')], initialfile=f'Seguimiento_Merma {format}.xlsx', initialdir="./Archivos_Excel")
+    file_path = filedialog.asksaveasfilename(title="Guardar como", filetypes=[('Archivos Excel', "*.xlsx"), ("Archivos CVS", "*.csv"), ("Cualquier Archivo", "*")], initialfile=f'Seguimiento_Merma_{format}.xlsx', initialdir="./Archivos_Excel")
     # Se asegura de que si se cancela la ventana no se genere el archivo
     if file_path is not None:
         wb.save(file_path)
