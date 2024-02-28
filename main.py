@@ -7,6 +7,7 @@ from PIL import Image, ImageTk
 from tkinter import ttk
 from tkinter import messagebox as MessageBox
 import openpyxl 
+from openpyxl.styles import Font
 from datetime import date
 from datetime import datetime
 
@@ -56,6 +57,12 @@ mt = None
 md = None
 mch = None
 mtr = None
+ptl = None
+ptt = None
+ptd = None
+ptch = None
+pttr = None
+
 # Botones
 btnAddMermaTotal = None
 btnCalcularMermaTotal = None
@@ -89,6 +96,9 @@ def ventanaCalculoMerma():
           font=(fuentePrincipal, 20), bg="#239e2a", fg='#fff').place(x=padding*2, y=padding)
     # Separador
     ttk.Separator(tkVentanaCalculoMerma).place(x=0, y=padding*6, relwidth=1)
+
+
+    # LIMPIEZA
 
     # Etiqueta Titulo de Proceso de Limpieza
     Label(tkVentanaCalculoMerma, text="Limpieza - Peso Cacao (KG)",
@@ -132,6 +142,9 @@ def ventanaCalculoMerma():
     rmlpLabel.config(font=(fuentePrincipal, 15),
                      bg=bgColorSecondary, fg='#fff')
     rmlpLabel.place(x=1075, y=padding*20)
+
+
+    # TOSTADO
 
     # Etiqueta Titulo de Proceso de Tostado
     Label(tkVentanaCalculoMerma, text="Tostado - Peso Cacao (KG)",
@@ -177,6 +190,9 @@ def ventanaCalculoMerma():
                      bg=bgColorSecondary, fg='#fff')
     rmtpLabel.place(x=1075, y=padding*38)
 
+
+    # DESCASCARILLADO
+
     # Etiqueta Titulo de Proceso de Descascarillado
     Label(tkVentanaCalculoMerma, text="Descascarillado - Peso Cacao (KG)",
           font=(fuentePrincipal, 15), bg="#856147", fg='#fff').place(x=20, y=padding*44)
@@ -221,6 +237,9 @@ def ventanaCalculoMerma():
                      bg=bgColorSecondary, fg='#fff')
     rmcpLabel.place(x=1075, y=padding*56)
 
+
+    # REFINADO
+
     # Etiqueta Titulo de Proceso de Refinado
     Label(tkVentanaCalculoMerma, text="Refinado - Peso NIBS a Chocolate (KG)",
           font=(fuentePrincipal, 15), bg="#4a3732", fg='#fff').place(x=20, y=padding*62)
@@ -242,7 +261,7 @@ def ventanaCalculoMerma():
     Entry(tkVentanaCalculoMerma, textvariable=pchospr, font=(
         fuentePrincipal, 15), bg="#f1f1f1", fg='#303030').place(x=300, y=padding*74)
 
-    # Etiqueta Total de la Cascarilla Chocolate
+    # Etiqueta Peso Total de la Cascarilla Chocolate
     Label(tkVentanaCalculoMerma, text="PESO TOTAL DE LA CASCARILLA", font=(
         fuentePrincipal, 15), bg=colorPrimary, fg='#fff').place(x=600, y=padding*68)
 
@@ -262,6 +281,8 @@ def ventanaCalculoMerma():
                        bg=bgColorSecondary, fg='#fff')
     rmpchoLabel.place(x=1075, y=padding*74)
 
+    # MERMA TOTAL
+
     # Etiqueta Titulo de Proceso de Tostado
     titulomermatotalLabel = Label(tkVentanaCalculoMerma, text="MERMA TOTAL  (MTR) = ML+MT+MC+MCH", font=(
         fuentePrincipal, 15), bg=colorDanger, fg='#fff').place(x=600, y=padding*80)
@@ -273,6 +294,9 @@ def ventanaCalculoMerma():
     rmermatotalLabel.place(x=1075, y=padding*80)
     # Separador
     ttk.Separator(tkVentanaCalculoMerma).place(x=0, y=padding*84, relwidth=1)
+
+
+    # BOTONES
 
     # boton de Calcular Merma total
     btnCalcularMermaTotal = tkinter.Button(tkVentanaCalculoMerma)
@@ -305,15 +329,26 @@ def exportarExcel():
     # Crear Libro de Excel
     wb = openpyxl.Workbook()
     ws = wb.active
-    for row in data:
-        ws.append(row)
+    
+    columnas = ('Entrada Limp.', 'Salida Limp.', 'Perdida', 'Porcentaje',
+                'Entrada Tost.', 'Salida Tost.', 'Perdida', 'Porcentaje', 
+                'Entrada Desc.', 'Salida Desc.', 'Perdida', 'Porcentaje',
+                'Entrada Ref.', 'Salida Ref.', 'Perdida', 'Porcentaje', 
+                'Total', 'Fecha')
+    
+    
+    for row_index, row in enumerate(data):
+        ws.append(columnas) 
+        for col_index, value in enumerate(row[1:]):
+            # Personalizar la forma en que se presentan los datos
+            ws.cell(row=row_index + 2, column=col_index + 1, value=value)
 
     # Ventana emergente de guardar como
     root = Tk()
     root.withdraw()
-    # Formato de fecha
-    now = datetime.now()    
-    format = now.strftime('%d-%m-%Y')
+    # Configuracion de guardado
+    nowExcel = datetime.now()    
+    format = nowExcel.strftime('%d-%m-%Y')
     file_path = filedialog.asksaveasfilename(title="Guardar como", filetypes=[('Archivos Excel', "*.xlsx"), ("Archivos CVS", "*.csv"), ("Cualquier Archivo", "*")], initialfile=f'Seguimiento_Merma_{format}.xlsx', initialdir="./Archivos_Excel")
     # Se asegura de que si se cancela la ventana no se genere el archivo
     if file_path is not None:
@@ -326,6 +361,7 @@ def calcularMermaTotal():
     global pcept, pcspt, rtphLabel, rmtpLabel
     global pcepd, pcspd, rtcasLabel, rmcpLabel
     global pnoiepr, pchospr, rtcaschoLabel, rmpchoLabel
+    global ptl, ptt, ptd, ptch
     global ml, mt, md, mch, mtr
     global rmermatotalLabel
     global btnAddMermaTotal, btnCalcularMermaTotal, btnLimpiarMermaTotal
@@ -342,25 +378,25 @@ def calcularMermaTotal():
 
         if float(pcepl.get()) > float(pcspl.get()):
 
-            pt1 = float(pcepl.get()) - float(pcspl.get())
-            ml = round((pt1*100)/float(pcepl.get()), 2)
+            ptl = float(pcepl.get()) - float(pcspl.get())
+            ml = round((ptl*100)/float(pcepl.get()), 2)
             rmlpLabel.config(text=ml)
-            rtsoLabel.config(text=pt1)
+            rtsoLabel.config(text=ptl)
 
-            pt1 = float(pcept.get()) - float(pcspt.get())
-            mt = round((pt1*100)/float(pcept.get()), 2)
+            ptt = float(pcept.get()) - float(pcspt.get())
+            mt = round((ptt*100)/float(pcept.get()), 2)
             rmtpLabel.config(text=mt)
-            rtphLabel.config(text=pt1)
+            rtphLabel.config(text=ptt)
 
-            pt1 = float(pcepd.get()) - float(pcspd.get())
-            md = round((pt1*100)/float(pcepd.get()), 2)
+            ptd = float(pcepd.get()) - float(pcspd.get())
+            md = round((ptd*100)/float(pcepd.get()), 2)
             rmcpLabel.config(text=md)
-            rtcasLabel.config(text=pt1)
+            rtcasLabel.config(text=ptd)
 
-            pt1 = float(pnoiepr.get()) - float(pchospr.get())
-            mch = round((pt1*100)/float(pnoiepr.get()), 2)
+            ptch = float(pnoiepr.get()) - float(pchospr.get())
+            mch = round((ptch*100)/float(pnoiepr.get()), 2)
             rmpchoLabel.config(text=mch)
-            rtcaschoLabel.config(text=pt1)
+            rtcaschoLabel.config(text=ptch)
             mtr = ml + mt + md + mch
 
             rmermatotalLabel.config(text=round(mtr, 2))
@@ -414,6 +450,7 @@ def guardarCalculoMermaTotal():
     global pcept, pcspt
     global pcepd, pcspd
     global pnoiepr, pchospr
+    global ptl, ptt, ptd, ptch
     global ml, mt, md, mch, mtr
 
     global btnAddMermaTotal, btnCalcularMermaTotal, btnLimpiarMermaTotal
@@ -426,25 +463,23 @@ def guardarCalculoMermaTotal():
     vpcspd = float(pcspd.get())
     vpnoiepr = float(pnoiepr.get())
     vpchospr = float(pchospr.get())
+    
 
-    now = datetime.now()
-    fecha = now.strftime("%Y-%m-%d %H:%M:%S")
+    now = datetime.now()    
+    fecha = now.strftime('%d-%m-%Y | %H:%M')
 
     # crear el cursor
     cursor = conexion.cursor()
 
     # definir la consulta con parámetros
-    query = "INSERT INTO produccion VALUES(null,%s,%s,100,%s,%s,%s,100,%s,%s,%s,100,%s,%s,%s,100,%s,%s,%s);"
+    query = "INSERT INTO produccion VALUES(null,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
 
     # ejecutar la consulta con los valores de las variables
-    cursor.execute(query, (vpcepl, vpcspl, ml, vpcept, vpcspt, mt,
-                   vpcepd, vpcspd, md, vpnoiepr, vpchospr, mch, mtr, fecha))
+    cursor.execute(query, (vpcepl, vpcspl, ptl, ml, vpcept, vpcspt, ptt, mt,
+                   vpcepd, vpcspd, ptd, md, vpnoiepr, vpchospr, ptch, mch, mtr, fecha))
 
     # confirmar los cambios en la base de datos
     conexion.commit()
-
-    # cerrar la conexión
-    conexion.close()
 
     MessageBox.showinfo(title="Atención", message="Registro Guardado!!!")
 
