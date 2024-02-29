@@ -75,7 +75,7 @@ def salir():
 
 
 # Ventana Calculadora de Merma Total
-def ventanaCalculoMerma():
+def ventanaCalculoMerma(privilegios):
     global pcepl, pcspl, rtsoLabel, rmlpLabel
     global pcept, pcspt, rtphLabel, rmtpLabel
     global pcepd, pcspd, rtcasLabel, rmcpLabel
@@ -97,6 +97,7 @@ def ventanaCalculoMerma():
     # Separador
     ttk.Separator(tkVentanaCalculoMerma).place(x=0, y=padding*6, relwidth=1)
 
+    print(privilegios)
 
     # LIMPIEZA
 
@@ -315,9 +316,10 @@ def ventanaCalculoMerma():
     Button(tkVentanaCalculoMerma, text="Cerrar", font=(fuentePrincipal, 12), bg=bgColorDanger,
            fg='#fff', command=tkVentanaCalculoMerma.destroy).place(x=500, y=padding*86)
     # boton exportar a excel
-    btnExportExcel = tkinter.Button(tkVentanaCalculoMerma)
-    btnExportExcel.configure(text="Exportar a Excel", font=(fuentePrincipal, 12), bg=bgColorSuccess, fg="#fff", command=exportarExcel)
-    btnExportExcel.place(x=1000, y=padding*86)
+    if privilegios == 'admin':
+        btnExportExcel = tkinter.Button(tkVentanaCalculoMerma)
+        btnExportExcel.configure(text="Exportar a Excel", font=(fuentePrincipal, 12), bg=bgColorSuccess, fg="#fff", command=exportarExcel)
+        btnExportExcel.place(x=1000, y=padding*86)
     
 
 def exportarExcel():
@@ -484,7 +486,7 @@ def guardarCalculoMermaTotal():
     MessageBox.showinfo(title="Atención", message="Registro Guardado!!!")
 
 
-def ventanaPanel():
+def ventanaPanel(privilegios):
     # Ventana Panel
     tkVentanaPanel = Toplevel(tkVentanaLogin)
     tkVentanaLogin.withdraw()
@@ -503,12 +505,14 @@ def ventanaPanel():
     # Etiqueta Titulo de la Ventana
     tituloLabel = Label(tkVentanaPanel, text=" Bahaleon - Menu Principal", font=(
         fuentePrincipal, 20), bg="#239e2a", fg='#fff').place(x=padding*2, y=padding)
+    privilegiosLabel = Label(tkVentanaPanel, text=f"{privilegios}", font=(
+        fuentePrincipal, 20), bg="#005DFF", fg='#fff').place(x=900, y=padding)
     # Separador
     ttk.Separator(tkVentanaPanel).place(x=0, y=padding*6, relwidth=1)
 
     # boton de Ventana de Calculadora
     ventanaCalculoMermaButton = Button(tkVentanaPanel, text="Calculadora", font=(
-        fuentePrincipal, 12), bg=bgColorPrimary, fg='#fff', command=ventanaCalculoMerma).place(x=600, y=150)
+        fuentePrincipal, 12), bg=bgColorPrimary, fg='#fff', command=lambda: ventanaCalculoMerma(privilegios)).place(x=600, y=150)
     # boton de salir
     salirButton = Button(tkVentanaPanel, text="Salir", font=(
         fuentePrincipal, 12), bg=bgColorDanger, fg='#fff', command=salir).place(x=600, y=200)
@@ -531,12 +535,14 @@ def validarUsuario(username, password):
         MessageBox.showwarning(
             title="Atención", message="Usuario y Clave Requeridos")
     else:
-        cursor.execute('SELECT clave FROM usuario WHERE usuario=%s and clave=%s',
+        cursor.execute('SELECT usuario, clave FROM usuario WHERE usuario=%s and clave=%s',
                        (username.get(), password.get()))
         result = cursor.fetchone()
+                
         if result is not None:
+            usuario = result[0]
             MessageBox.showinfo(title="Atención", message="Bienvenido/a")
-            ventanaPanel()
+            ventanaPanel(usuario)
         else:
             MessageBox.showwarning(
                 title="Atención", message="Usuario y Clave incorrectos")
